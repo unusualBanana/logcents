@@ -7,13 +7,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  onIdTokenChanged,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebase-client";
 
-export const setAuthToken = async (token: string) => {
-  if (!token) return;
-
+export const setAuthToken = async (token: string | null) => {
   await fetch("/auth/set-token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -33,18 +30,6 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => {
-  // Initialize auth state and token listener
-  onIdTokenChanged(auth, async (authUser) => {
-    if (authUser) {
-      const token = await authUser.getIdToken();
-      set({ user: authUser });
-      await setAuthToken(token);
-    } else {
-      set({ user: null });
-      await setAuthToken("");
-    }
-  });
-
   return {
     user: null,
     loading: true,
@@ -130,12 +115,8 @@ export const useAuthStore = create<AuthState>((set) => {
     logout: async () => {
       set({ error: "" });
       try {
-        await fetch("/auth/clear-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: "" }),
-        });
-        await signOut(auth);
+        await Promise.all([setAuthToken(null), signOut(auth)]);
+
         set({ user: null });
       } catch (error) {
         const err = error as { message?: string };

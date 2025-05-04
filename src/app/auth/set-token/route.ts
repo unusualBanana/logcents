@@ -5,11 +5,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const { token } = await request.json();
+
+  if (token === undefined || token === null) {
+    // Clear token functionality
+    const res = NextResponse.json({
+      success: true,
+      message: "Token cleared successfully",
+    });
+    res.cookies.delete("token");
+    return res;
+  }
+
   if (!token) {
     return NextResponse.json({ success: false, message: "Token is required" });
   }
 
-  // verify token
+  // Verify token
   const decodedToken = await adminAuth.verifyIdToken(token);
   const { uid, email } = decodedToken;
 
