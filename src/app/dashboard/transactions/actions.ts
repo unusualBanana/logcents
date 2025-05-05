@@ -5,6 +5,8 @@ import { adminDb } from "@/lib/firebase/firebase-admin";
 import { TransactionsTable } from "@/lib/models/transaction";
 import { UsersTable } from "@/lib/models/user";
 import { FieldValue } from "firebase-admin/firestore";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
+import { analyzeImageWithAI } from "@/lib/ai";
 
 /**
  * Server action to add a new transaction
@@ -15,10 +17,11 @@ export async function addTransaction(formData: FormData) {
   const date = formData.get("date") as string;
   const description = formData.get("description") as string;
   const receiptUrl = formData.get("receiptUrl") as string;
+  const categoryId = formData.get("categoryId") as string;
 
-  if (!name || isNaN(amount) || !date) {
+  if (!name || isNaN(amount) || !date || !categoryId) {
     return {
-      error: "Name, amount, and date are required",
+      error: "Name, amount, date, and category are required",
     };
   }
 
@@ -28,6 +31,7 @@ export async function addTransaction(formData: FormData) {
     date: new Date(date), // Use plain Date
     description,
     receiptUrl,
+    categoryId,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -92,11 +96,12 @@ export async function updateTransaction(transactionId: string, formData: FormDat
     const description = formData.get("description") as string;
     const amount = parseFloat(formData.get("amount") as string);
     const date = formData.get("date") as string;
+    const categoryId = formData.get("categoryId") as string;
 
-    if (!name || isNaN(amount) || !date) {
+    if (!name || isNaN(amount) || !date || !categoryId) {
       return {
         success: false,
-        error: "Name, amount, and date are required",
+        error: "Name, amount, date, and category are required",
       };
     }
 
@@ -111,6 +116,7 @@ export async function updateTransaction(transactionId: string, formData: FormDat
         description: description || "",
         amount,
         date: new Date(date),
+        categoryId,
         updatedAt: FieldValue.serverTimestamp(),
       });
 
@@ -122,6 +128,41 @@ export async function updateTransaction(transactionId: string, formData: FormDat
     return {
       success: false,
       error: "Failed to update transaction",
+    };
+  }
+}
+
+/**
+ * Server action to upload and analyze a receipt
+ */
+export async function uploadReceipt(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) {
+      return {
+        success: false,
+        error: "No file uploaded"
+      };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
+
+    // Run both operations in parallel
+    const [uploadResult, aiResponse] = await Promise.all([
+      uploadImageToCloudinary(imageBuffer, await getUserId()),
+      analyzeImageWithAI(imageBuffer, file.type),
+    ]);
+
+    return {
+      ...aiResponse.object,
+      url: uploadResult?.url
+    };
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return {
+      success: false,
+      error: "Failed to process the image"
     };
   }
 }

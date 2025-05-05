@@ -4,6 +4,9 @@ import { Transaction } from "@/lib/models/transaction";
 import { convertHeicToJpeg } from "@/lib/utils";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { uploadReceipt } from "@/app/dashboard/transactions/actions";
+import { ReceiptAnalysis } from "@/lib/ai";
+import { useCategoryStore } from "@/store/useCategoryStore";
 
 interface FileUploaderProps {
   onDataExtracted: (data: Partial<Transaction>) => void;
@@ -11,16 +14,10 @@ interface FileUploaderProps {
   onUploadStateChange?: (isUploading: boolean) => void;
 }
 
-// Receipt API response type
-interface ReceiptApiResponse {
-  error?: string;
-  date: string;
-  description: string;
-  paymentType: string;
-  title: string;
-  total: number;
-  url?: string;
-}
+// Server action response type
+type UploadReceiptResponse = 
+  | { success: false; error: string }
+  | ({ success: true } & ReceiptAnalysis)
 
 // Supported file types
 const SUPPORTED_IMAGE_TYPES = [
@@ -110,25 +107,26 @@ export default function FileUploader({
 
     try {
       toast.info("Analyzing receipt...");
-      const response = await fetch("/dashboard/transactions/upload-receipt", {
-        method: "POST",
-        body: formData,
-      });
+      const result = await uploadReceipt(formData) as UploadReceiptResponse;
 
-      const data: ReceiptApiResponse = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Failed to extract data from image");
+      if (!result.success) {
+        toast.error(result.error || "Failed to extract data from image");
         return null;
       }
 
+      // map the category name to the category id
+      const categoryId = useCategoryStore.getState().categories.find(
+        (category) => category.name === result.categoryName
+      )?.id;
+
       // Map API response to transaction data
       return {
-        name: data.title,
-        description: data.description,
-        amount: data.total,
-        date: new Date(data.date),
-        receiptUrl: data.url,
+        name: result.title,
+        description: result.description,
+        amount: result.total,
+        date: new Date(result.date),
+        receiptUrl: result.url,
+        categoryId: categoryId || "general",
       };
     } catch (error) {
       console.error("Error uploading file:", error);

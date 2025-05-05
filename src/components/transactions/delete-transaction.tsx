@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Trash } from "lucide-react";
 
 interface DeleteTransactionProps {
   transactionId: string;
@@ -65,7 +66,7 @@ export default function DeleteTransaction({
           size={buttonSize}
           className={triggerClassName}
         >
-          Delete Transaction
+          <Trash className="h-4 w-4 hidden sm:block" /> <span className="block sm:hidden">Delete</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

@@ -15,18 +15,8 @@ console.log(`Firebase emulator mode: ${useEmulator ? "enabled" : "disabled"}`);
 const UsersTable = "users";
 const TransactionsTable = "transactions";
 
-// Define categories that match your app's categories
-const categories = [
-  { id: "food", name: "Food & Dining" },
-  { id: "transport", name: "Transportation" },
-  { id: "utilities", name: "Utilities" },
-  { id: "entertainment", name: "Entertainment" },
-  { id: "housing", name: "Housing" },
-  { id: "general", name: "General" },
-];
-
 // Configure how many fake transactions to generate
-const NUM_TRANSACTIONS = 25;
+const NUM_TRANSACTIONS = 100;
 const USER_ID = ""; // Replace with your test user ID
 
 // Generate random transaction data using faker
@@ -38,17 +28,22 @@ const generateFakeTransactions = (count: number) => {
   startDate.setMonth(startDate.getMonth() - 6);
 
   for (let i = 0; i < count; i++) {
-    const categoryId =
-      categories[Math.floor(Math.random() * categories.length)].id;
     const hasReceipt = Math.random() > 0.7; // 30% chance of having a receipt
 
     transactions.push({
-      name: faker.finance.transactionDescription(),
-      description: faker.lorem.sentence(),
-      amount: parseFloat(faker.finance.amount({ min: 10_000, max: 1_000_000, dec: 0 })),
-      categoryId,
+      name: faker.food.dish(),
+      description: faker.food.description(),
+      amount: faker.number.int({ min: 1, max: 300 }) * 1000,
+      categoryId: "general",
       date: faker.date.between({ from: startDate, to: new Date() }),
-      receiptUrl: hasReceipt ? faker.image.urlPicsumPhotos() : "",
+      receiptUrl: hasReceipt
+        ? faker.image.urlPicsumPhotos({
+            blur: 0,
+            grayscale: false,
+            height: faker.number.int({ min: 100, max: 500 }),
+            width: faker.number.int({ min: 100, max: 500 }),
+          })
+        : "",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
@@ -77,7 +72,7 @@ const seedTransactions = async (userId: string) => {
       ...transaction,
     });
     console.log(
-      `Prepared transaction: ${transaction.name} ($${transaction.amount})`
+      `Prepared transaction: ${transaction.name} (${transaction.amount})`
     );
   }
 
@@ -98,11 +93,7 @@ const seedDatabase = async () => {
         id: USER_ID,
         email: "test@example.com",
         preferences: {
-          categories: categories.map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            color: faker.color.rgb(),
-          })),
+          categories: [],
         },
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),

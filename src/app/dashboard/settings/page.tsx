@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import CategorySettingsCard from "@/components/settings/categories/category-settings-card";
 
 // Context
 import { useAuthStore } from "@/store/authStore";
@@ -208,6 +209,8 @@ export default function SettingsPage() {
         currentTheme={currentTheme}
         setTheme={setTheme}
       />
+
+      <CategorySettingsCard />
 
       <AccountSettingsCard onLogoutClick={() => setLogoutDialogOpen(true)} />
 

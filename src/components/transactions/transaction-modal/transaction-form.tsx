@@ -11,6 +11,14 @@ import DeleteTransaction from "../delete-transaction";
 import { Transaction } from "@/lib/models/transaction";
 import { useMediaQuery } from "@/lib/client-hooks";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { useCategoryStore } from "@/store/useCategoryStore";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Types
 interface TransactionFormProps {
@@ -27,6 +35,7 @@ interface TransactionFormState {
   description: string;
   amount: number;
   date: string;
+  categoryId: string;
 }
 
 // Helper function
@@ -50,19 +59,26 @@ const TransactionForm = memo(
     handleDeleteSuccess,
     receiptElement,
   }: TransactionFormProps) => {
+    const { categories } = useCategoryStore();
+
+    // Check if there's only one category (General)
+    const hasOnlyDefaultCategory =
+      categories.length === 1 && categories[0]?.id === "general";
+
     // Form state
     const [form, setForm] = useState<TransactionFormState>({
       name: initialData?.name || "",
       description: initialData?.description || "",
       amount: initialData?.amount ? Number(initialData.amount) : 0,
       date: formatDateForForm(initialData?.date),
+      categoryId: initialData?.categoryId || categories[0]?.id || "",
     });
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
       initialData?.date instanceof Date
         ? initialData.date
         : initialData?.date
-        ? new Date(initialData.date.toDate())
+        ? new Date((initialData.date as Timestamp).toDate())
         : new Date()
     );
 
@@ -77,13 +93,14 @@ const TransactionForm = memo(
           description: initialData.description || "",
           amount: initialData.amount ? Number(initialData.amount) : 0,
           date: formatDateForForm(initialData?.date),
+          categoryId: initialData.categoryId || categories[0]?.id || "",
         });
 
         setSelectedDate(
           initialData?.date instanceof Date
             ? initialData.date
             : initialData?.date
-            ? new Date(initialData.date.toDate())
+            ? new Date((initialData.date as Timestamp).toDate())
             : new Date()
         );
       }
@@ -172,6 +189,50 @@ const TransactionForm = memo(
               />
             </div>
           </div>
+
+          {/* Category selector - only show if there are multiple categories */}
+          {!hasOnlyDefaultCategory && (
+            <div className="flex items-center justify-between">
+              <Label htmlFor="categoryId" className="text-sm font-medium w-1/3">
+                Category
+              </Label>
+              <div className="w-2/3">
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(value: string) =>
+                    setForm({ ...form, categoryId: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: category.color }}
+                          />
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input
+                  type="hidden"
+                  name="categoryId"
+                  value={form.categoryId}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Hidden category input when there's only one category */}
+          {hasOnlyDefaultCategory && (
+            <input type="hidden" name="categoryId" value={categories[0]?.id} />
+          )}
         </div>
 
         {/* Receipt Display - placed above the buttons */}

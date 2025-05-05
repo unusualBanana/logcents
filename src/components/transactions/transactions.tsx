@@ -84,7 +84,6 @@ const useTransactionModal = () => {
   };
 
   const openForEdit = (transaction: Transaction) => {
-    console.log("Editing transaction:", transaction);
     setEditingId(transaction.id);
     setCurrentData(transaction);
     setIsOpen(true);

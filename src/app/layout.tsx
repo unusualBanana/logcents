@@ -39,16 +39,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TokenSync />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          <TokenSync />
           {children}
+          <Toaster />
         </ThemeProvider>
-        <Toaster />
       </body>
     </html>
   );

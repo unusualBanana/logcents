@@ -6,6 +6,8 @@ import { Transaction } from "@/lib/models/transaction";
 import { useState, useEffect } from "react";
 import ReceiptModal from "./receipt-modal";
 import DeleteTransaction from "./delete-transaction";
+import { useCategoryStore } from "@/store/useCategoryStore";
+import { Receipt, Pencil } from "lucide-react";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -28,6 +30,7 @@ export default function TransactionCard({
   onEdit, 
   onDelete,
 }: TransactionCardProps) {
+  const { categories } = useCategoryStore();
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
@@ -52,10 +55,11 @@ export default function TransactionCard({
   };
   
   // Format the date
-  const formattedDate = transaction.date && 
-    (transaction.date instanceof Date
-      ? transaction.date.toLocaleDateString()
-      : transaction.date.toDate().toLocaleDateString());
+  const formattedDate = transaction.date instanceof Date
+    ? transaction.date.toLocaleDateString()
+    : new Date(transaction.date).toLocaleDateString();
+
+  const category = categories.find((cat) => cat.id === transaction.categoryId);
 
   return (
     <Card 
@@ -66,11 +70,14 @@ export default function TransactionCard({
         {/* Responsive layout using CSS instead of conditional rendering */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           {/* Transaction details section */}
-          <div className="flex items-start gap-3">
-            {/* Color indicator based on transaction type - hidden on mobile with CSS */}
-            <div className={`hidden sm:block w-1.5 h-16 rounded-full mt-1 ${
-              transaction.amount < 0 ? "bg-destructive" : "bg-primary"
-            }`}></div>
+          <div className="flex items-center gap-3">
+            {/* Color indicator based on category - hidden on mobile with CSS */}
+            <div 
+              className="w-1.5 h-16 rounded-full mt-1"
+              style={{ 
+                backgroundColor: category?.color || "#000000"
+              }}
+            ></div>
             
             <div>
               {/* Amount - Extra prominent */}
@@ -84,14 +91,22 @@ export default function TransactionCard({
               
               <div className="flex flex-col mt-1">
                 {/* Title - medium */}
-                <h3 className="text-base sm:text-lg font-medium line-clamp-1 text-foreground">
-                  {transaction.name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-medium line-clamp-1 text-foreground">
+                    {transaction.name}
+                  </h3>
+                </div>
                 
                 {/* Date - small */}
-                <span className="text-xs text-muted-foreground">
-                  {formattedDate}
-                </span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{formattedDate}</span>
+                  {category && (
+                    <>
+                      <span>•</span>
+                      <span>{category.name}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -116,7 +131,7 @@ export default function TransactionCard({
                   setShowReceiptModal(true);
                 }}
               >
-                View Receipt
+                <Receipt className="h-4 w-4" /> View Receipt
               </Button>
             )}
             <Button
@@ -127,7 +142,7 @@ export default function TransactionCard({
                 onEdit(transaction);
               }}
             >
-              Edit
+              <Pencil className="h-4 w-4" /> Edit
             </Button>
             
             {/* Delete button with confirmation dialog */}

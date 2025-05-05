@@ -44,13 +44,13 @@ export default function ReceiptModal({ isOpen, onOpenChange, receiptUrl }: Recei
 
   return (
     <Dialog open={showDialog} onOpenChange={onOpenChange}>
-      <DialogContentWithoutCloseButton className="sm:max-w-[90vw] max-h-[90vh] p-0 overflow-hidden bg-transparent border-0 shadow-none">
+      <DialogContentWithoutCloseButton className="inline-flex p-0 overflow-visible bg-transparent border-0 shadow-none items-start justify-center">
         <DialogHeader className="sr-only">
           <DialogTitle>Receipt Image</DialogTitle>
         </DialogHeader>
-        
-        <div className="relative w-full h-full flex items-center justify-center">
-          {/* Close button positioned absolute relative to the dialog */}
+        {/* Container for image and close button */}
+        <div className="relative">
+          {/* Close button positioned absolute relative to the dialog content */}
           <button 
             onClick={() => onOpenChange(false)}
             className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
@@ -60,18 +60,14 @@ export default function ReceiptModal({ isOpen, onOpenChange, receiptUrl }: Recei
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
-
-          {/* Image container that fills the available space */}
-          <div className="relative flex items-center justify-center w-full h-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              ref={imgRef}
-              src={receiptUrl} 
-              alt="Receipt" 
-              className="max-h-[85vh] max-w-full w-auto h-auto object-contain"
-              loading="eager"
-            />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            ref={imgRef}
+            src={receiptUrl} 
+            alt="Receipt" 
+            className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain block"
+            loading="eager"
+          />
         </div>
       </DialogContentWithoutCloseButton>
     </Dialog>
