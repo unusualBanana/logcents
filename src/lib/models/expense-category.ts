@@ -3,6 +3,8 @@ export type ExpenseCategory = {
   name: string;
   color: string;
   order: number; // Added order property
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export const DEFAULT_CATEGORIES: ExpenseCategory[] = [
@@ -11,5 +13,7 @@ export const DEFAULT_CATEGORIES: ExpenseCategory[] = [
     name: "General",
     color: "#6E56CF", // Default purple color
     order: 0, // Default order value
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];

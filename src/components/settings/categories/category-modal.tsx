@@ -77,7 +77,7 @@ export default function CategoryModal({
 
   const handleSave = useCallback(async () => {
     const categoryData = {
-      id: editingCategoryId || Date.now().toString(),
+      id: editingCategoryId || "", // if inserting, id is empty string, it will be set by the server
       name: categoryName,
       color: categoryColor,
       order: editingCategoryId ? initialData?.order || 0 : 0,

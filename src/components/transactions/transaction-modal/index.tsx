@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 // Components
 import {
@@ -29,7 +30,7 @@ import {
 } from "@/app/dashboard/transactions/actions";
 
 // Types
-import { Transaction } from "@/lib/models/transaction";
+import { Transaction, transactionZodSchema } from "@/lib/models/transaction";
 import { useMediaQuery } from "@/lib/client-hooks";
 import { DialogDescription } from "@radix-ui/react-dialog";
 
@@ -66,28 +67,52 @@ export default function TransactionModal({
 
   const handleTransactionSubmit = useCallback(
     async (formData: FormData) => {
-      let result;
+      // Extract data from FormData
+      const data = Object.fromEntries(formData.entries());
 
-      if (editingTransactionId) {
-        // Update existing transaction
-        result = await updateTransaction(editingTransactionId, formData);
-        if (result.success) {
-          toast.success("Transaction updated successfully!");
-          onSuccess();
-          onClose();
+      let validatedData: Transaction;
+      try {
+        // Validate data using Zod schema
+        validatedData = transactionZodSchema.parse({
+          id: "", // will be set by the server
+          ...data,
+          amount: parseFloat(data.amount as string), // Convert amount to number
+          date: new Date(data.date as string), // Convert date string to Date object
+        });
+      } catch (error: unknown) {
+        // Handle Zod validation errors
+        if (error instanceof z.ZodError) {
+          console.log("error", error.errors);
+          toast.error(error.errors[0].message || "Failed to validate transaction data.");
         } else {
-          toast.error(result.error || "Failed to update transaction");
+          toast.error("An unexpected validation error occurred.");
         }
+        return;
+      }
+
+      // Define a type for the action results based on the updated actions return type
+      type ActionResult = { success: boolean; error?: string };
+
+      let result: ActionResult;
+      const operationType = editingTransactionId ? 'update' : 'add';
+
+      if (operationType === 'update') {
+        // Update existing transaction
+        result = await updateTransaction(editingTransactionId!, validatedData);
       } else {
         // Add new transaction
-        result = await addTransaction(formData);
-        if (result.success) {
-          toast.success("Transaction added successfully!");
-          onSuccess();
-          onClose();
-        } else {
-          toast.error(result.error || "Failed to add transaction");
-        }
+        result = await addTransaction(validatedData);
+      }
+
+      // Handle action result
+      if (result.success) {
+        const successMessage = operationType === 'update' ? "Transaction updated successfully!" : "Transaction added successfully!";
+        toast.success(successMessage);
+        onSuccess();
+        onClose();
+      } else {
+        const errorMessage = operationType === 'update' ? "Failed to update transaction" : "Failed to add transaction";
+        toast.error(result.error || errorMessage);
       }
     },
     [editingTransactionId, onSuccess, onClose]
