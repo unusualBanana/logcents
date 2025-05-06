@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Transaction } from "@/lib/models/transaction";
 import { useTransactionStore } from "@/store/useTransactionStore";
+import { useCurrencyStore } from "@/store/useCurrencyStore";
 import TransactionModal from "./transaction-modal";
 import TransactionCard from "./transaction-card";
 import FileUploader from "./file-uploader";
 import { MobileTransactionFab } from "./mobile-transaction-fab";
 import { toast } from "sonner";
 import { deleteTransaction } from "@/app/dashboard/transactions/actions";
+import { formatLongDate } from "@/lib/utils";
 
 // Ensure the `date` field is valid before converting to a Date object
 const groupTransactionsByDate = (transactions: Transaction[]) => {
@@ -42,7 +44,7 @@ const groupTransactionsByDate = (transactions: Transaction[]) => {
 };
 
 // Function to format date for display
-const formatDateHeader = (dateStr: string) => {
+const formatDateHeader = (dateStr: string, locale: string) => {
   const date = new Date(dateStr);
   const today = new Date();
   const yesterday = new Date(today);
@@ -54,12 +56,7 @@ const formatDateHeader = (dateStr: string) => {
   } else if (date.toDateString() === yesterday.toDateString()) {
     return "Yesterday";
   } else {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return formatLongDate(date, locale);
   }
 };
 
@@ -71,29 +68,29 @@ const useTransactionModal = () => {
     Partial<Transaction> | undefined
   >(undefined);
 
-  const openForCreate = () => {
+  const openForCreate = useCallback(() => {
     setEditingId(null);
     setCurrentData(undefined);
     setIsOpen(true);
-  };
+  }, []);
 
-  const openForCreateWithData = (data: Partial<Transaction>) => {
+  const openForCreateWithData = useCallback((data: Partial<Transaction>) => {
     setEditingId(null);
     setCurrentData(data);
     setIsOpen(true);
-  };
+  }, []);
 
-  const openForEdit = (transaction: Transaction) => {
+  const openForEdit = useCallback((transaction: Transaction) => {
     setEditingId(transaction.id);
     setCurrentData(transaction);
     setIsOpen(true);
-  };
+  }, []);
 
-  const close = () => {
+  const close = useCallback(() => {
     setIsOpen(false);
     setEditingId(null);
     setCurrentData(undefined);
-  };
+  }, []);
 
   return {
     isOpen,
@@ -109,6 +106,7 @@ const useTransactionModal = () => {
 
 export default function Transactions() {
   const { user } = useAuthStore();
+  const { currencySetting } = useCurrencyStore();
 
   // Use transaction store for transactions list, fetching and loading state
   const { transactions, loading, fetchTransactions, hasMore } =
@@ -160,7 +158,7 @@ export default function Transactions() {
     };
   }, [handleObserver, transactions]);
 
-  const handleDeleteTransactionClick = async (transactionId: string) => {
+  const handleDeleteTransactionClick = useCallback(async (transactionId: string) => {
     if (!user) return;
 
     try {
@@ -183,7 +181,7 @@ export default function Transactions() {
       console.error("Error deleting transaction:", error);
       toast.error("Failed to delete transaction");
     }
-  };
+  }, [user, fetchTransactions, modal.close, modal.editingId]);
 
   const handleScanReceiptClick = () => {
     setTriggerUpload(true);
@@ -200,7 +198,7 @@ export default function Transactions() {
   };
 
   // Group transactions by date
-  const groupedTransactions = groupTransactionsByDate(transactions);
+  const groupedTransactions = useMemo(() => groupTransactionsByDate(transactions), [transactions]);
 
   return (
     <div>
@@ -260,7 +258,7 @@ export default function Transactions() {
             <div key={dateStr} className="mb-6">
               <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 py-2 border-b mb-3">
                 <h3 className="text-md font-medium text-gray-600 dark:text-gray-400">
-                  {formatDateHeader(dateStr)}
+                  {formatDateHeader(dateStr, currencySetting.locale)}
                 </h3>
               </div>
               <div className="space-y-4">
@@ -270,6 +268,7 @@ export default function Transactions() {
                     transaction={transaction}
                     onEdit={modal.openForEdit}
                     onDelete={handleDeleteTransactionClick}
+                    currencySetting={currencySetting}
                   />
                 ))}
               </div>

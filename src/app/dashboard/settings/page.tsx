@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CategorySettingsCard from "@/components/settings/categories/category-settings-card";
+import CurrencySettingsCard from "@/components/settings/currency/currency-settings-card";
 
 // Context
 import { useAuthStore } from "@/store/authStore";
@@ -212,6 +213,8 @@ export default function SettingsPage() {
 
       <CategorySettingsCard />
 
+      <CurrencySettingsCard />
+
       <AccountSettingsCard onLogoutClick={() => setLogoutDialogOpen(true)} />
 
       <LogoutConfirmationDialog
@@ -219,6 +222,8 @@ export default function SettingsPage() {
         onOpenChange={setLogoutDialogOpen}
         onConfirm={handleLogout}
       />
+
+      {/* Sync Components */}
     </div>
   );
 }

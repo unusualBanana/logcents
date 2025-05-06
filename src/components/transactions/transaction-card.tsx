@@ -3,32 +3,36 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Transaction } from "@/lib/models/transaction";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import ReceiptModal from "./receipt-modal";
 import DeleteTransaction from "./delete-transaction";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { Receipt, Pencil } from "lucide-react";
+import { CurrencySetting } from "@/lib/models/currency-setting";
+import { formatLongDate } from "@/lib/utils";
 
 interface TransactionCardProps {
   transaction: Transaction;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transactionId: string) => void;
+  currencySetting: CurrencySetting;
 }
 
 // Currency formatter helper function
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
+const formatCurrency = (amount: number, currencySetting: CurrencySetting) => {
+  return new Intl.NumberFormat(currencySetting.locale, {
     style: "currency",
-    currency: "IDR",
+    currency: currencySetting.currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
 };
 
-export default function TransactionCard({ 
-  transaction, 
-  onEdit, 
+export default memo(function TransactionCard({
+  transaction,
+  onEdit,
   onDelete,
+  currencySetting,
 }: TransactionCardProps) {
   const { categories } = useCategoryStore();
   const [showReceiptModal, setShowReceiptModal] = useState(false);
@@ -55,9 +59,7 @@ export default function TransactionCard({
   };
   
   // Format the date
-  const formattedDate = transaction.date instanceof Date
-    ? transaction.date.toLocaleDateString()
-    : new Date(transaction.date).toLocaleDateString();
+  const formattedDate = formatLongDate(transaction.date, currencySetting.locale);
 
   const category = categories.find((cat) => cat.id === transaction.categoryId);
 
@@ -86,7 +88,7 @@ export default function TransactionCard({
                   transaction.amount < 0 ? "text-destructive" : "text-primary"
                 }`}
               >
-                {formatCurrency(transaction.amount)}
+                {formatCurrency(transaction.amount, currencySetting)}
               </span>
               
               <div className="flex flex-col mt-1">
@@ -157,4 +159,4 @@ export default function TransactionCard({
       </CardContent>
     </Card>
   );
-}
+});

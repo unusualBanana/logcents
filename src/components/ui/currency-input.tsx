@@ -5,7 +5,7 @@ import {
   formatNumberByCurrency,
   getCurrencyDefaultLocale,
   getDecimalSeparator,
-} from "@/lib/currency-utils";
+} from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -99,7 +99,8 @@ export function CurrencyInput({
             prefixClassName
           )}
         >
-          {currency}
+          {/* Display currency symbol instead of code */}
+          {new Intl.NumberFormat(effectiveLocale, { style: 'currency', currency: currency }).formatToParts(0).find(part => part.type === 'currency')?.value}
         </div>
       )}
       <Input
@@ -121,3 +122,75 @@ export function CurrencyInput({
     </div>
   );
 }
+
+/**
+ * Formats a date as a long date string (e.g., "Friday, October 27, 2023").
+ * @param dateInput The date to format (Date object or string).
+ * @param locale The locale to use for formatting (e.g., "en-US"). Defaults to "en-US".
+ * @returns The formatted date string.
+ */
+/*
+export function formatLongDate(
+  dateInput: Date | string,
+  locale: string = "en-US"
+): string {
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) {
+    return "Invalid Date"; // Handle invalid date input
+  }
+  return date.toLocaleDateString(locale, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+*/
+
+/**
+ * Converts HEIC/HEIF images to JPEG format
+ * @param heicFile HEIC/HEIF file to convert
+ * @returns Promise resolving to a converted JPEG File or null if conversion fails
+ */
+/*
+export async function convertHeicToJpeg(heicFile: File): Promise<File | null> {
+  try {
+    // Dynamic import
+    const heic2anyModule = await import("heic2any");
+    const heic2any = heic2anyModule.default;
+
+    // Convert the HEIC file to JPEG
+    const convertedBlob = (await heic2any({
+      blob: heicFile,
+      toType: "image/jpeg",
+      quality: 0.6,
+    })) as Blob;
+
+    // Create a new filename
+    const newFilename = heicFile.name
+      .replace(/\.(heic|heif)$/i, ".jpg")
+      .replace(/\s+/g, "_");
+
+    return new File([convertedBlob], newFilename, { type: "image/jpeg" });
+  } catch (error) {
+    console.error("HEIC conversion error:", error);
+    return null;
+  }
+}
+*/
+
+/**
+ * Compresses a JPEG image file.
+ * @param file The image file to compress.
+ * @returns Promise resolving to a compressed File or null if compression fails.
+ */
+/*
+export const compressJpegImage = async (file: File): Promise<File | null> => {
+  const compressedFile = await imageCompression(file, {
+    maxSizeMB: 0.7,
+    useWebWorker: true,
+  });
+  console.log("Compressed file:", compressedFile);
+  return compressedFile;
+};
+*/

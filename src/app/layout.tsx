@@ -33,7 +33,8 @@ export default function RootLayout({
       />
       {process.env.NODE_ENV === "development" && (
         <head>
-          {/* <script src="https://unpkg.com/react-scan/dist/auto.global.js" /> */}
+          {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+          <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
       )}
       <body

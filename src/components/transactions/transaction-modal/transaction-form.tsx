@@ -12,6 +12,7 @@ import { Transaction } from "@/lib/models/transaction";
 import { useMediaQuery } from "@/lib/client-hooks";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { useCurrencyStore } from "@/store/useCurrencyStore";
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ const TransactionForm = memo(
     receiptElement,
   }: TransactionFormProps) => {
     const { categories } = useCategoryStore();
+    const { currencySetting } = useCurrencyStore();
 
     // Check if there's only one category (General)
     const hasOnlyDefaultCategory =
@@ -111,7 +113,8 @@ const TransactionForm = memo(
         {/* Clean Amount Display - Fullwidth without Rp on side */}
         <div className="mb-6">
           <div className="text-sm text-muted-foreground mb-1 text-center">
-            Amount (IDR)
+            {/* Dynamically display currency name */}
+            Amount ({currencySetting.name})
           </div>
           <div className="w-full">
             <input
@@ -123,7 +126,8 @@ const TransactionForm = memo(
             <CurrencyInput
               value={form.amount}
               onChange={(value) => setForm({ ...form, amount: value })}
-              currency="IDR"
+              currency={currencySetting.currency}
+              locale={currencySetting.locale}
               showCurrencyPrefix={true}
               placeholder="0"
               className="w-full text-4xl font-bold text-center outline-none border-none focus:ring-0 focus:outline-none bg-gray-100 dark:bg-gray-700 rounded-lg h-auto p-3 md:text-4xl"
