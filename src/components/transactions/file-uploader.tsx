@@ -1,12 +1,12 @@
 "use client";
 
-import { Transaction } from "@/lib/models/transaction";
-import { convertHeicToJpeg } from "@/lib/utils";
-import { useRef, useState, useEffect } from "react";
-import { toast } from "sonner";
 import { uploadReceipt } from "@/app/dashboard/transactions/actions";
 import { ReceiptAnalysis } from "@/lib/ai";
+import { Transaction } from "@/lib/models/transaction";
+import { compressJpegImage, convertHeicToJpeg } from "@/lib/utils";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface FileUploaderProps {
   onDataExtracted: (data: Partial<Transaction>) => void;
@@ -15,23 +15,28 @@ interface FileUploaderProps {
 }
 
 // Server action response type
-type UploadReceiptResponse = 
+type UploadReceiptResponse =
   | { success: false; error: string }
-  | ({ success: true } & ReceiptAnalysis)
+  | ({ success: true } & ReceiptAnalysis);
 
 // Supported file types
 const SUPPORTED_IMAGE_TYPES = [
-  'image/jpeg', 'image/jpg', 'image/png', 
-  'image/gif', 'image/webp', 'image/heic', 'image/heif'
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
 ];
 
 // Maximum file size (5MB)
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
-export default function FileUploader({ 
-  onDataExtracted, 
+export default function FileUploader({
+  onDataExtracted,
   triggerUpload = false,
-  onUploadStateChange
+  onUploadStateChange,
 }: FileUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const inputFileRef = useRef<HTMLInputElement | null>(null);
@@ -59,14 +64,16 @@ export default function FileUploader({
       toast.error("File size exceeds 5 MB limit");
       return false;
     }
-    
+
     // Validate file type
     const fileType = file.type.toLowerCase();
     if (!SUPPORTED_IMAGE_TYPES.includes(fileType)) {
-      toast.error("Please upload a valid image file (JPEG, PNG, GIF, WebP, or HEIC)");
+      toast.error(
+        "Please upload a valid image file (JPEG, PNG, GIF, WebP, or HEIC)"
+      );
       return false;
     }
-    
+
     return true;
   };
 
@@ -75,39 +82,45 @@ export default function FileUploader({
    */
   const prepareFileForUpload = async (file: File): Promise<File | null> => {
     const fileType = file.type.toLowerCase();
-    const needsConversion = fileType === "image/heic" || fileType === "image/heif";
-    
-    if (!needsConversion) {
-      return file;
-    }
-    
-    try {
-      toast.info("Converting HEIC image...");
+    const needsConversion =
+      fileType === "image/heic" || fileType === "image/heif";
+
+    if (needsConversion) {
+      // log the time it takes to convert the file
+      const startTime = performance.now();
       const convertedFile = await convertHeicToJpeg(file);
-      
+      const endTime = performance.now();
+      console.log(`Time taken to convert file: ${endTime - startTime}ms`);
       if (!convertedFile) {
-        toast.error("Failed to convert HEIC image");
+        toast.error("Failed to convert image format");
         return null;
       }
-      
-      return convertedFile;
-    } catch (error) {
-      console.error("Error converting file:", error);
-      toast.error("Failed to convert image format");
+      file = convertedFile;
+    }
+
+    const startTime = performance.now();
+    const compressedFile = await compressJpegImage(file);
+    const endTime = performance.now();
+    console.log(`Time taken to compress file: ${endTime - startTime}ms`);
+    if (!compressedFile) {
+      toast.error("Failed to compress image");
       return null;
     }
+    return compressedFile;
   };
 
   /**
    * Uploads file to server and extracts receipt data
    */
-  const uploadFileAndExtractData = async (fileToUpload: File): Promise<Partial<Transaction> | null> => {
+  const uploadFileAndExtractData = async (
+    fileToUpload: File
+  ): Promise<Partial<Transaction> | null> => {
     const formData = new FormData();
     formData.append("file", fileToUpload);
 
     try {
       toast.info("Analyzing receipt...");
-      const result = await uploadReceipt(formData) as UploadReceiptResponse;
+      const result = (await uploadReceipt(formData)) as UploadReceiptResponse;
 
       if (!result.success) {
         toast.error(result.error || "Failed to extract data from image");
@@ -115,9 +128,11 @@ export default function FileUploader({
       }
 
       // map the category name to the category id
-      const categoryId = useCategoryStore.getState().categories.find(
-        (category) => category.name === result.categoryName
-      )?.id;
+      const categoryId = useCategoryStore
+        .getState()
+        .categories.find(
+          (category) => category.name === result.categoryName
+        )?.id;
 
       // Map API response to transaction data
       return {
@@ -138,19 +153,24 @@ export default function FileUploader({
   /**
    * Handles file selection and processing
    */
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
     // Log file details for debugging
-    console.log("Selected file:", selectedFile.type, 
-      `(${(selectedFile.size / (1024 * 1024)).toFixed(2)}MB)`);
-    
+    console.log(
+      "Selected file:",
+      selectedFile.type,
+      `(${(selectedFile.size / (1024 * 1024)).toFixed(2)}MB)`
+    );
+
     // Validate selected file
     if (!validateFile(selectedFile)) return;
-    
+
     setIsUploading(true);
-    
+
     try {
       // Prepare file (convert if needed)
       const preparedFile = await prepareFileForUpload(selectedFile);
@@ -158,19 +178,23 @@ export default function FileUploader({
         setIsUploading(false);
         return;
       }
-      
+
       // Upload and extract data
+      // log the time it takes to upload the file
+      const startTime = performance.now();
       const transactionData = await uploadFileAndExtractData(preparedFile);
+      const endTime = performance.now();
+      console.log(`Time taken to upload file: ${endTime - startTime}ms`);
       if (!transactionData) {
         setIsUploading(false);
         return;
       }
-      
+
       // Clear input field
       if (inputFileRef.current) {
         inputFileRef.current.value = "";
       }
-      
+
       // Pass data to parent component
       onDataExtracted(transactionData);
       toast.success("Receipt data extracted successfully!");

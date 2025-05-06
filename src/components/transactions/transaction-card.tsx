@@ -131,7 +131,7 @@ export default function TransactionCard({
                   setShowReceiptModal(true);
                 }}
               >
-                <Receipt className="h-4 w-4" /> View Receipt
+                <Receipt className="h-4 w-4" /> Receipt
               </Button>
             )}
             <Button
