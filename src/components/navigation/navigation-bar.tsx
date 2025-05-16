@@ -13,11 +13,11 @@ export default function NavigationBar() {
       href: "/dashboard/transactions",
       icon: BarChart2,
     },
-    {
-      name: "Report",
-      href: "/dashboard/report",
-      icon: FileText,
-    },
+    // {
+    //   name: "Report",
+    //   href: "/dashboard/report",
+    //   icon: FileText,
+    // },
     {
       name: "Settings",
       href: "/dashboard/settings",

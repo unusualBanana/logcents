@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import TokenSync from "@/components/auth/token-sync";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: "400",
+});
+
+const fontMono = Geist_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -38,7 +44,7 @@ export default function RootLayout({
         </head>
       )}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"

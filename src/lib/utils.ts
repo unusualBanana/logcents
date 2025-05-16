@@ -1,6 +1,7 @@
 import imageCompression from "browser-image-compression";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { CurrencySetting } from "@/lib/models/currency-setting";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -185,3 +186,13 @@ export const compressJpegImage = async (file: File): Promise<File | null> => {
   console.log("Compressed file:", compressedFile);
   return compressedFile;
 };
+
+export function formatCurrency(amount: number, currencySetting: CurrencySetting) {
+  // Simple currency formatting. Adjust as needed.
+  return new Intl.NumberFormat(currencySetting.locale, {
+    style: "currency",
+    currency: currencySetting.currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
