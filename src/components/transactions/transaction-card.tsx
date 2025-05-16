@@ -9,7 +9,7 @@ import DeleteTransaction from "./delete-transaction";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { Receipt, Pencil } from "lucide-react";
 import { CurrencySetting } from "@/lib/models/currency-setting";
-import { formatLongDate } from "@/lib/utils";
+import { formatLongDate, formatCurrency } from "@/lib/utils";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -17,16 +17,6 @@ interface TransactionCardProps {
   onDelete: (transactionId: string) => void;
   currencySetting: CurrencySetting;
 }
-
-// Currency formatter helper function
-const formatCurrency = (amount: number, currencySetting: CurrencySetting) => {
-  return new Intl.NumberFormat(currencySetting.locale, {
-    style: "currency",
-    currency: currencySetting.currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 export default memo(function TransactionCard({
   transaction,
@@ -37,6 +27,9 @@ export default memo(function TransactionCard({
   const { categories } = useCategoryStore();
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if there's only one category (General)
+  const hasOnlyDefaultCategory = categories.length === 1 && categories[0]?.id === "general";
   
   // Only use isMobile state for JavaScript functionality that needs to know device type
   useEffect(() => {
@@ -74,12 +67,14 @@ export default memo(function TransactionCard({
           {/* Transaction details section */}
           <div className="flex items-center gap-3">
             {/* Color indicator based on category - hidden on mobile with CSS */}
-            <div 
-              className="w-1.5 h-16 rounded-full mt-1"
-              style={{ 
-                backgroundColor: category?.color || "#000000"
-              }}
-            ></div>
+            {!hasOnlyDefaultCategory && (
+              <div 
+                className="w-1.5 h-16 rounded-full mt-1"
+                style={{ 
+                  backgroundColor: category?.color || "#000000"
+                }}
+              ></div>
+            )}
             
             <div>
               {/* Amount - Extra prominent */}
@@ -102,7 +97,7 @@ export default memo(function TransactionCard({
                 {/* Date - small */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{formattedDate}</span>
-                  {category && (
+                  {!hasOnlyDefaultCategory && category && (
                     <>
                       <span>•</span>
                       <span>{category.name}</span>

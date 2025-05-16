@@ -5,6 +5,7 @@ import { ReceiptAnalysis } from "@/lib/ai";
 import { Transaction } from "@/lib/models/transaction";
 import { compressJpegImage, convertHeicToJpeg } from "@/lib/utils";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { createHash } from "crypto";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -158,6 +159,15 @@ export default function FileUploader({
   ) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
+
+    // log the time it takes to encode and hash the file
+    const startTime = performance.now();
+    const arrayBuffer = await selectedFile.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
+    const hash = createHash("sha1").update(imageBuffer).digest("hex");
+    const endTime = performance.now();
+    console.log(`Time taken to encode and hash file: ${endTime - startTime}ms`);
+    console.log("Hash:", hash);
 
     // Log file details for debugging
     console.log(

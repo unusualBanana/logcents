@@ -4,6 +4,8 @@ import { z } from "zod";
 import { adminDb } from "./firebase/firebase-admin";
 import { getUserId } from "./firebase/auth-utilities";
 import { ExpenseCategory } from "./models/expense-category";
+import { User } from "./models/user";
+import { SupportedCurrenciesMap } from "./models/currency-setting";
 
 // Define the base schema without categories
 const baseReceiptSchema = z.object({
@@ -31,17 +33,12 @@ const baseReceiptSchema = z.object({
     .enum(["credit", "debit", "cash", "other"])
     .describe("Payment type"),
   total: z
-    .number()
-    .describe(
-      "Extract the total amount from the receipt. Return it as a full numeric value exactly as shown, without converting it to a decimal or changing its format. Do not round or shorten the number."
-    ),
+    .number(),
   url: z.string().optional(),
 });
 
 // Export the type for use elsewhere
-export type ReceiptAnalysis = z.infer<typeof baseReceiptSchema> & {
-  categories: string;
-};
+export type ReceiptAnalysis = z.infer<typeof baseReceiptSchema>;
 
 // Function to analyze image with AI
 export async function analyzeImageWithAI(
@@ -50,6 +47,10 @@ export async function analyzeImageWithAI(
 ) {
   // get categories from db
   const userId = await getUserId();
+  const userDoc = await adminDb.collection("users").doc(userId).get();
+  const userData = userDoc.data() as User | undefined;
+  const currencySetting = userData?.preferences?.currency || SupportedCurrenciesMap.USD
+
   const userCategories = await adminDb
     .collection("users")
     .doc(userId)
@@ -68,6 +69,11 @@ export async function analyzeImageWithAI(
         "The main category of the transaction, default to 'general' if not available. The category must be one of the following: " +
           categoryNames.join(", ")
       ),
+    total: z
+      .number()
+      .describe(
+        `Extract the total amount from the receipt. The amount should be in ${currencySetting.currency} currency format. Return it as a full numeric value exactly as shown, without converting it to a decimal or changing its format. Do not round or shorten the number.`
+      ),
   });
 
   return generateObject({
@@ -79,7 +85,7 @@ export async function analyzeImageWithAI(
         content: [
           {
             type: "text",
-            text: "Analyze the attached receipt image. Extract key details.",
+            text: `Analyze the attached receipt image. Extract key details. The receipt amount should be interpreted in ${currencySetting.currency} currency format.`,
           },
           {
             type: "image",

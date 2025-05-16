@@ -256,7 +256,7 @@ export default function Transactions() {
         <div>
           {groupedTransactions.map(([dateStr, dateTransactions]) => (
             <div key={dateStr} className="mb-6">
-              <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 py-2 border-b mb-3">
+              <div className="sticky top-0 z-10 bg-background py-2 border-b mb-3">
                 <h3 className="text-md font-medium text-gray-600 dark:text-gray-400">
                   {formatDateHeader(dateStr, currencySetting.locale)}
                 </h3>
