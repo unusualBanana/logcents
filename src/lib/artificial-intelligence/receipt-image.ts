@@ -1,11 +1,11 @@
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { adminDb } from "./firebase/firebase-admin";
-import { getUserId } from "./firebase/auth-utilities";
-import { ExpenseCategory } from "./models/expense-category";
-import { User } from "./models/user";
-import { SupportedCurrenciesMap } from "./models/currency-setting";
+import { adminDb } from "../firebase/firebase-admin";
+import { getUserId } from "../firebase/auth-utilities";
+import { ExpenseCategory } from "../models/expense-category";
+import { User } from "../models/user";
+import { SupportedCurrenciesMap } from "../models/currency-setting";
 
 // Define the base schema without categories
 const baseReceiptSchema = z.object({

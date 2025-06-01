@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Camera, CreditCard, FileText, Plus, X } from "lucide-react";
+import { Camera, FileText, Plus } from "lucide-react";
 import { useState } from "react";
 
 interface MobileTransactionFabProps {

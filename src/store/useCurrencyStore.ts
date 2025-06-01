@@ -3,7 +3,7 @@ import { devtools } from "zustand/middleware";
 import { CurrencySetting, SupportedCurrenciesMap } from "@/lib/models/currency-setting";
 import { db } from "@/lib/firebase/firebase-client";
 import { doc, getDoc } from "firebase/firestore";
-import { updateUserCurrencySetting } from "@/app/dashboard/settings/currency/actions";
+import { updateCurrencySetting } from "@/app/dashboard/settings/currency/actions";
 import { User } from "@/lib/models/user";
 
 const DEFAULT_CURRENCY: CurrencySetting = SupportedCurrenciesMap.IDR;
@@ -40,7 +40,7 @@ export const useCurrencyStore = create<CurrencyState>()(
         } else {
            console.log("Currency setting not found or invalid, setting default and saving.");
            set({ currencySetting: DEFAULT_CURRENCY });
-           await updateUserCurrencySetting(DEFAULT_CURRENCY);
+           await updateCurrencySetting(DEFAULT_CURRENCY);
         }
       } catch (error) {
          console.error("Failed to fetch or set default currency setting:", error);
@@ -49,7 +49,7 @@ export const useCurrencyStore = create<CurrencyState>()(
     },
     updateCurrencySetting: async (currency) => {
       try {
-         await updateUserCurrencySetting(currency);
+         await updateCurrencySetting(currency);
          set({ currencySetting: currency });
       } catch (error) {
          console.error("Failed to update currency setting:", error);

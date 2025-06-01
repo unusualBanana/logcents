@@ -8,11 +8,11 @@ import { useTransactionStore } from "@/store/useTransactionStore";
 import { useCurrencyStore } from "@/store/useCurrencyStore";
 import TransactionModal from "./transaction-modal";
 import TransactionCard from "./transaction-card";
-import FileUploader from "./file-uploader";
 import { MobileTransactionFab } from "./mobile-transaction-fab";
 import { toast } from "sonner";
 import { deleteTransaction } from "@/app/dashboard/transactions/actions";
 import { formatLongDate } from "@/lib/utils";
+import { ReceiptUploader, ReceiptUploaderRef } from "@/components/transactions/receipt-uploader";
 
 // Ensure the `date` field is valid before converting to a Date object
 const groupTransactionsByDate = (transactions: Transaction[]) => {
@@ -107,19 +107,19 @@ const useTransactionModal = () => {
 export default function Transactions() {
   const { user } = useAuthStore();
   const { currencySetting } = useCurrencyStore();
-
-  // Use transaction store for transactions list, fetching and loading state
-  const { transactions, loading, fetchTransactions, hasMore } =
-    useTransactionStore();
-
-  // Group related state using custom hooks
+  const { transactions, loading, fetchTransactions, hasMore } = useTransactionStore();
   const modal = useTransactionModal();
-
-  // Reference for the intersection observer
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const [triggerUpload, setTriggerUpload] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const receiptUploaderRef = useRef<ReceiptUploaderRef>(null);
+
+  const handleDataExtracted = (data: Partial<Transaction>) => {
+    modal.openForCreateWithData(data);
+  };
+
+  const handleTriggerScan = () => {
+    receiptUploaderRef.current?.triggerFileDialog();
+  };
 
   useEffect(() => {
     if (user) {
@@ -183,32 +183,11 @@ export default function Transactions() {
     }
   }, [user, fetchTransactions, modal.close, modal.editingId]);
 
-  const handleScanReceiptClick = () => {
-    setTriggerUpload(true);
-    setTimeout(() => setTriggerUpload(false), 100);
-  };
-
-  const handleDataExtracted = (data: Partial<Transaction>) => {
-    // Open transaction modal with the extracted data
-    modal.openForCreateWithData(data);
-  };
-
-  const handleUploadStateChange = (uploadingState: boolean) => {
-    setIsUploading(uploadingState);
-  };
-
   // Group transactions by date
   const groupedTransactions = useMemo(() => groupTransactionsByDate(transactions), [transactions]);
 
   return (
     <div>
-      {/* Hidden FileUploader component */}
-      <FileUploader
-        onDataExtracted={handleDataExtracted}
-        triggerUpload={triggerUpload}
-        onUploadStateChange={handleUploadStateChange}
-      />
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-3xl sm:text-4xl font-bold">Transactions</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -217,21 +196,18 @@ export default function Transactions() {
           </Button>
           <Button
             variant="outline"
-            onClick={handleScanReceiptClick}
+            onClick={handleTriggerScan}
             className="w-full sm:w-auto"
-            disabled={isUploading}
           >
-            {isUploading ? "Processing..." : "Scan Receipt"}
+            Scan Receipt
           </Button>
         </div>
       </div>
 
-      {isUploading && (
-        <div className="mb-8 p-4 sm:p-6 border rounded-lg bg-gray-50 dark:bg-gray-800 text-center">
-          <p className="text-sm sm:text-base">Analyzing receipt...</p>
-          <div className="mt-2 animate-pulse text-lg sm:text-xl">⏳</div>
-        </div>
-      )}
+      <ReceiptUploader
+        ref={receiptUploaderRef}
+        onDataExtracted={handleDataExtracted}
+      />
 
       <TransactionModal
         isOpen={modal.isOpen}
@@ -241,9 +217,6 @@ export default function Transactions() {
         editingTransactionId={modal.editingId}
       />
 
-      <h2 className="text-xl sm:text-2xl font-semibold mb-4">
-        Your Transactions
-      </h2>
       {loading && transactions.length === 0 ? (
         <p className="text-gray-500 text-center py-8">
           Loading transactions...
@@ -296,8 +269,9 @@ export default function Transactions() {
       {/* Mobile Transaction FAB - only visible on mobile screens */}
       <MobileTransactionFab
         onAddTransaction={modal.openForCreate}
-        onScanReceipt={handleScanReceiptClick}
+        onScanReceipt={handleTriggerScan}
       />
     </div>
   );
 }
+

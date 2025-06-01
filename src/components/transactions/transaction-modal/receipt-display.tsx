@@ -14,10 +14,10 @@ const ReceiptDisplay = memo(({
   onViewReceipt
 }: ReceiptDisplayProps) => {
   return (
-    <div className="my-4 p-3 border rounded-md bg-gray-50 dark:bg-gray-800">
+    <div className="my-4 p-3 border rounded-md bg-background-50 dark:bg-background-800">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-md overflow-hidden bg-white dark:bg-gray-700 flex-shrink-0 relative border">
+          <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 relative border">
             <Image 
               src={receiptUrl} 
               alt="Receipt" 

@@ -11,52 +11,70 @@ import {
   deleteCategory,
 } from "@/app/dashboard/settings/categories/actions";
 import { devtools } from "zustand/middleware";
+import { useAuthStore } from "@/store/authStore";
 
 interface CategoryState {
   categories: ExpenseCategory[];
-  fetchCategories: (userId: string) => Promise<void>;
+  fetchCategories: () => Promise<void>;
   addCategory: (category: ExpenseCategory) => Promise<void>;
   updateCategory: (category: ExpenseCategory) => Promise<void>;
   deleteCategory: (categoryId: string) => Promise<void>;
 }
 
+const getUserId = () => {
+  const userId = useAuthStore.getState().user?.uid;
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+  return userId;
+};
+
 export const useCategoryStore = create<CategoryState>()(
-  devtools((set) => ({
+  devtools((set, get) => ({
     categories: [...DEFAULT_CATEGORIES],
-    fetchCategories: async (userId) => {
+
+    fetchCategories: async () => {
       try {
-        const categoriesCollection = collection(
-          db,
-          `users/${userId}/categories`
-        );
+        const userId = getUserId();
+        const categoriesCollection = collection(db, `users/${userId}/categories`);
         const snapshot = await getDocs(categoriesCollection);
 
         const userCategories = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as ExpenseCategory[];
+
         set({ categories: [...DEFAULT_CATEGORIES, ...userCategories] });
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     },
+
     addCategory: async (category) => {
-      await addCategory(category);
-      set((state) => ({ categories: [...state.categories, category] }));
+      try {
+        await addCategory(category);
+        await get().fetchCategories();
+      } catch (error) {
+        console.error("Error adding category:", error);
+      }
     },
-    updateCategory: async (category: ExpenseCategory) => {
-      await updateCategory(category);
-      set((state) => ({
-        categories: state.categories.map((cat) =>
-          cat.id === category.id ? { ...cat, ...category } : cat
-        ),
-      }));
+
+    updateCategory: async (category) => {
+      try {
+        await updateCategory(category);
+        await get().fetchCategories();
+      } catch (error) {
+        console.error("Error updating category:", error);
+      }
     },
+
     deleteCategory: async (categoryId) => {
-      await deleteCategory(categoryId);
-      set((state) => ({
-        categories: state.categories.filter((cat) => cat.id !== categoryId),
-      }));
+      try {
+        await deleteCategory(categoryId);
+        await get().fetchCategories();
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
     },
   }))
 );

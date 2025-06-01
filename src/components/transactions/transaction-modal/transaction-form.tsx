@@ -130,7 +130,7 @@ const TransactionForm = memo(
               locale={currencySetting.locale}
               showCurrencyPrefix={true}
               placeholder="0"
-              className="w-full text-4xl font-bold text-center outline-none border-none focus:ring-0 focus:outline-none bg-gray-100 dark:bg-gray-700 rounded-lg h-auto p-3 md:text-4xl"
+              className="w-full text-4xl font-bold text-center outline-none border-none focus:ring-0 focus:outline-none rounded-lg h-auto p-3 md:text-4xl"
               aria-label="Transaction amount"
             />
           </div>

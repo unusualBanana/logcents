@@ -22,7 +22,7 @@ export const CategorySettingsCard = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetchCategories(user.uid);
+    fetchCategories();
   }, [fetchCategories, user]);
 
   const handleCardClick = (category: ExpenseCategory) => {

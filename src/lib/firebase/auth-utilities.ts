@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { adminAuth } from "./firebase-admin";
+import { userService } from "@/services/user.service";
 
 export const verifyToken = async () => {
   const cookieStore = cookies();
@@ -9,10 +9,12 @@ export const verifyToken = async () => {
   if (!token) redirect("/");
 
   try {
-    await adminAuth.verifyIdToken(token);
+    const isValid = await userService.verifyToken(token);
+    if (!isValid.success) {
+      redirect("/");
+    }
   } catch (error) {
     console.log("Token verification failed:", error);
-
     redirect("/");
   }
 };
@@ -24,7 +26,12 @@ export const isTokenValid = async () => {
   if (!token) return false;
 
   try {
-    await adminAuth.verifyIdToken(token);
+    const checkToken =  await userService.verifyToken(token);
+
+    if (!checkToken.success) {
+      return false;
+    }
+
     return true;
   } catch (error) {
     console.log("Token verification failed:", error);
@@ -41,10 +48,9 @@ export const getUserId = async () => {
   }
 
   try {
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    return decodedToken.uid;
+    return await userService.getUserIdFromToken(token);
   } catch (error) {
     console.log("Token verification failed:", error);
     throw new Error("Token verification failed");
   }
-}
+};

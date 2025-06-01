@@ -10,7 +10,7 @@ const CategorySync = () => {
 
   useEffect(() => {
     if (user) {
-      fetchCategories(user.uid);
+      fetchCategories();
     }
   }, [user, fetchCategories]);
 

@@ -13,6 +13,6 @@ export type User = {
   id: string; // same id as auth uid
   email: string;
   preferences?: UserPreferences;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 };

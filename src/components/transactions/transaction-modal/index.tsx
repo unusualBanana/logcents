@@ -163,7 +163,7 @@ export default function TransactionModal({
           <DrawerContent>
             <DrawerDescription className="sr-only">Transaction</DrawerDescription>
             <DrawerHeader className="mx-auto">
-              <DrawerTitle className="text-xl font-medium">{titleText}</DrawerTitle>
+              <DrawerTitle className="text-xl font-medium text-center">{titleText}</DrawerTitle>
               <DrawerClose />
             </DrawerHeader>
             <div className="px-4 pb-4">
@@ -175,9 +175,9 @@ export default function TransactionModal({
         // Desktop: Use Dialog
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
           <DialogContent className="w-[95%] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-            <DialogDescription>Transaction Modal</DialogDescription>
+            <DialogDescription className="sr-only">Transaction Modal</DialogDescription>
             <DialogHeader>
-              <DialogTitle className="text-xl font-medium pb-2">
+              <DialogTitle className="text-xl font-medium pb-2 text-center">
                 {titleText}
               </DialogTitle>
             </DialogHeader>
