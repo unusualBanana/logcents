@@ -9,13 +9,15 @@ const serviceAccount = {
   privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 } as ServiceAccount;
 
+const appCredential =
+  process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_ENABLED === "true"
+    ? credential.applicationDefault()
+    : credential.cert(serviceAccount);
+
 const app =
   getApps()[0] ||
   initializeApp({
-    credential:
-      process.env.NODE_ENV === "development"
-        ? credential.applicationDefault()
-        : credential.cert(serviceAccount),
+    credential: appCredential,
     projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
   });
 

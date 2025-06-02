@@ -9,6 +9,26 @@ const getUserCategoriesCollection = async () => {
 };
 
 export const categoryService = {
+  async getAllCategories() {
+    try {
+      const categoriesCollection = await getUserCategoriesCollection();
+      const userCategories = await categoriesCollection.get();
+      const categories = userCategories.docs.map((doc) => doc.data()) as ExpenseCategory[];
+      return {
+        success: true,
+        categories,
+        error: "",
+      };
+    } catch (error) {
+      console.error("Error getting categories:", error);
+      return {
+        success: false,
+        categories: [],
+        error: "Failed to get categories",
+      };
+    }
+  },
+
   async addCategory(category: ExpenseCategory) {
     try {
       const categoriesCollection = await getUserCategoriesCollection();

@@ -1,26 +1,17 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { isTokenValid } from "@/lib/firebase/auth-utilities";
 import { GalleryVerticalEnd } from "lucide-react";
-import Image from "next/image";
 import { redirect } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function LoginPage() {
   const isAuthenticated = await isTokenValid();
   if (isAuthenticated) redirect("/");
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="bg-muted relative hidden lg:block">
-        <Image
-          src="https://ui.shadcn.com/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          width={500}
-          height={500}
-        />
-      </div>
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
+    <div className="min-h-svh flex items-center justify-center bg-muted/20 p-4">
+      <div className="w-full max-w-md space-y-6">
+        <div className="flex justify-center">
           <a href="#" className="flex items-center gap-2 font-medium">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <GalleryVerticalEnd className="size-4" />
@@ -28,11 +19,11 @@ export default async function LoginPage() {
             Acme Inc.
           </a>
         </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
+        <Card>
+          <CardContent className="p-6">
             <LoginForm />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

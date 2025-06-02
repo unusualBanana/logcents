@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display, Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import TokenSync from "@/components/auth/token-sync";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 const fontSans = DM_Sans({
   subsets: ["latin"],
@@ -53,8 +54,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TokenSync />
-          {children}
-          <Toaster />
+          <PostHogProvider>
+            {children}
+            <Toaster />
+          </PostHogProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -12,7 +12,11 @@ import { MobileTransactionFab } from "./mobile-transaction-fab";
 import { toast } from "sonner";
 import { deleteTransaction } from "@/app/dashboard/transactions/actions";
 import { formatLongDate } from "@/lib/utils";
-import { ReceiptUploader, ReceiptUploaderRef } from "@/components/transactions/receipt-uploader";
+import {
+  ReceiptUploader,
+  ReceiptUploaderRef,
+} from "@/components/transactions/receipt-uploader";
+import VoiceRecorderUI from "@/components/audio-recorder";
 
 // Ensure the `date` field is valid before converting to a Date object
 const groupTransactionsByDate = (transactions: Transaction[]) => {
@@ -107,11 +111,13 @@ const useTransactionModal = () => {
 export default function Transactions() {
   const { user } = useAuthStore();
   const { currencySetting } = useCurrencyStore();
-  const { transactions, loading, fetchTransactions, hasMore } = useTransactionStore();
+  const { transactions, loading, fetchTransactions, hasMore } =
+    useTransactionStore();
   const modal = useTransactionModal();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const receiptUploaderRef = useRef<ReceiptUploaderRef>(null);
+  const [showRecorder, setShowRecorder] = useState(false);
 
   const handleDataExtracted = (data: Partial<Transaction>) => {
     modal.openForCreateWithData(data);
@@ -158,33 +164,46 @@ export default function Transactions() {
     };
   }, [handleObserver, transactions]);
 
-  const handleDeleteTransactionClick = useCallback(async (transactionId: string) => {
-    if (!user) return;
+  const handleDeleteTransactionClick = useCallback(
+    async (transactionId: string) => {
+      if (!user) return;
 
-    try {
-      // Use the server action to delete the transaction
-      const result = await deleteTransaction(transactionId);
+      try {
+        // Use the server action to delete the transaction
+        const result = await deleteTransaction(transactionId);
 
-      if (result.success) {
-        // Refetch the transactions after successful deletion
-        fetchTransactions(user.uid);
-        toast.success("Transaction deleted successfully!");
+        if (result.success) {
+          // Refetch the transactions after successful deletion
+          fetchTransactions(user.uid);
+          toast.success("Transaction deleted successfully!");
 
-        // If we were editing this transaction, close the modal
-        if (modal.editingId === transactionId) {
-          modal.close();
+          // If we were editing this transaction, close the modal
+          if (modal.editingId === transactionId) {
+            modal.close();
+          }
+        } else {
+          toast.error(result.error || "Failed to delete transaction");
         }
-      } else {
-        toast.error(result.error || "Failed to delete transaction");
+      } catch (error) {
+        console.error("Error deleting transaction:", error);
+        toast.error("Failed to delete transaction");
       }
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
-      toast.error("Failed to delete transaction");
+    },
+    [user, fetchTransactions, modal.close, modal.editingId]
+  );
+
+  const handleRecordingComplete = (data?: Partial<Transaction>) => {
+    if (data) {
+      handleDataExtracted(data);
     }
-  }, [user, fetchTransactions, modal.close, modal.editingId]);
+    setShowRecorder(false);
+  };
 
   // Group transactions by date
-  const groupedTransactions = useMemo(() => groupTransactionsByDate(transactions), [transactions]);
+  const groupedTransactions = useMemo(
+    () => groupTransactionsByDate(transactions),
+    [transactions]
+  );
 
   return (
     <div>
@@ -270,8 +289,16 @@ export default function Transactions() {
       <MobileTransactionFab
         onAddTransaction={modal.openForCreate}
         onScanReceipt={handleTriggerScan}
+        onRecordTransaction={() => setShowRecorder(true)}
       />
+
+      {/* Audio Recorder Overlay */}
+      {showRecorder && (
+        <VoiceRecorderUI
+          onComplete={handleRecordingComplete}
+          onClose={() => setShowRecorder(false)}
+        />
+      )}
     </div>
   );
 }
-

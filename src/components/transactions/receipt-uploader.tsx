@@ -1,7 +1,6 @@
 "use client";
 
 import { uploadReceipt } from "@/app/dashboard/transactions/actions";
-import { ReceiptAnalysis } from "@/lib/artificial-intelligence/receipt-image";
 import { Transaction } from "@/lib/models/transaction";
 import { compressJpegImage, convertHeicToJpeg } from "@/lib/utils";
 import { useCategoryStore } from "@/store/useCategoryStore";
@@ -17,10 +16,6 @@ interface ReceiptUploaderProps {
 export interface ReceiptUploaderRef {
   triggerFileDialog: () => void;
 }
-
-type UploadReceiptResponse =
-  | { success: false; error: string }
-  | ({ success: true } & ReceiptAnalysis);
 
 // Constants
 const SUPPORTED_IMAGE_TYPES = [
@@ -105,11 +100,7 @@ export const ReceiptUploader = forwardRef<ReceiptUploaderRef, ReceiptUploaderPro
         const formData = new FormData();
         formData.append("file", file);
 
-        const result = (await uploadReceipt(formData)) as UploadReceiptResponse;
-        if (!result.success) {
-          toast.error(result.error || "Failed to extract data from image");
-          return null;
-        }
+        const result = await uploadReceipt(formData);
 
         // Map category name to ID
         const categoryId = useCategoryStore
@@ -126,7 +117,7 @@ export const ReceiptUploader = forwardRef<ReceiptUploaderRef, ReceiptUploaderPro
         };
       } catch (error) {
         console.error("Error uploading file:", error);
-        toast.error("Failed to upload file");
+        toast.error(error instanceof Error ? error.message : "Failed to upload file");
         return null;
       }
     };
@@ -186,7 +177,7 @@ export const ReceiptUploader = forwardRef<ReceiptUploaderRef, ReceiptUploaderPro
         />
 
         {isUploading && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-100">
             <div className="text-center text-white">
               <p className="text-lg mb-4">{status}</p>
               <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>

@@ -1,4 +1,4 @@
-import { Home, BarChart2, FileText, Settings } from "lucide-react";
+import { Home, BarChart2, Settings } from "lucide-react";
 import ActiveNavLink from "./active-nav-link";
 
 export default function NavigationBar() {

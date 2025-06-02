@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/firebase-client";
+import posthog from "posthog-js";
 
 export const setAuthToken = async (token: string | null) => {
   await fetch("/auth/set-token", {
@@ -43,7 +44,7 @@ export const useAuthStore = create<AuthState>((set) => {
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
         if (result.user) {
-          await setAuthToken(await result.user.getIdToken());
+          await setAuthToken(await result.user.getIdToken(true));
           set({ user: result.user });
         }
       } catch (error) {
@@ -66,7 +67,7 @@ export const useAuthStore = create<AuthState>((set) => {
           password
         );
         if (userCredential.user) {
-          await setAuthToken(await userCredential.user.getIdToken());
+          await setAuthToken(await userCredential.user.getIdToken(true));
           set({ user: userCredential.user });
         }
       } catch (error) {
@@ -128,6 +129,16 @@ export const useAuthStore = create<AuthState>((set) => {
     // Initialize auth state
     initAuthState: (() => {
       onAuthStateChanged(auth, (authUser) => {
+        if (process.env.NODE_ENV === 'production') {
+          if (authUser) {
+            posthog.identify(authUser.uid, {
+              email: authUser.email,
+              name: authUser.displayName,
+            });
+          } else {
+            posthog.reset();
+          }
+        }
         set({ user: authUser, loading: false });
       });
     })(),

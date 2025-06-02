@@ -17,5 +17,5 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Connect to Firebase emulators if in development mode
+// Connect to Firebase emulators if emulator is enabled
 connectEmulators({ auth, db });

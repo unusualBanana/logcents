@@ -30,3 +30,10 @@ export async function updateTransaction(transactionId: string, transaction: Tran
 export async function uploadReceipt(formData: FormData) {
   return transactionService.uploadReceipt(formData);
 }
+
+/**
+ * Server action to transcribe and analyze audio
+ */
+export async function transcribeAudio(formData: FormData) {
+  return transactionService.transcribeAudio(formData);
+}

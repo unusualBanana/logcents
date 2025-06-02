@@ -5,9 +5,13 @@ import { UsersTable } from "@/lib/models/user";
 import { FieldValue } from "firebase-admin/firestore";
 import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import { analyzeImageWithAI } from "@/lib/artificial-intelligence/receipt-image";
+import { analyzeAudioWithAI } from "@/lib/artificial-intelligence/recorder-transcribe";
 
 const getUserTransactionsCollection = (userId: string) => {
-  return adminDb.collection(UsersTable).doc(userId).collection(TransactionsTable);
+  return adminDb
+    .collection(UsersTable)
+    .doc(userId)
+    .collection(TransactionsTable);
 };
 
 export const transactionService = {
@@ -97,35 +101,43 @@ export const transactionService = {
   },
 
   async uploadReceipt(formData: FormData) {
-    try {
-      const file = formData.get("file") as File;
-      if (!file) {
-        return {
-          success: false,
-          error: "No file uploaded"
-        };
-      }
-
-      const arrayBuffer = await file.arrayBuffer();
-      const imageBuffer = Buffer.from(arrayBuffer);
-
-      // Run both operations in parallel
-      const [uploadResult, aiResponse] = await Promise.all([
-        uploadImageToCloudinary(imageBuffer, await getUserId()),
-        analyzeImageWithAI(imageBuffer, file.type),
-      ]);
-
-      return {
-        ...aiResponse.object,
-        url: uploadResult?.url
-      };
-    } catch (error) {
-      console.error("Error processing request:", error);
-      return {
-        success: false,
-        error: "Failed to process the image"
-      };
+    const file = formData.get("file") as File;
+    if (!file) {
+      throw new Error("No file uploaded");
     }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
+
+    // Run both operations in parallel
+    const [uploadResult, aiResponse] = await Promise.all([
+      uploadImageToCloudinary(imageBuffer, await getUserId()),
+      analyzeImageWithAI(imageBuffer, file.type),
+    ]);
+
+    return {
+      ...aiResponse.object,
+      url: uploadResult?.url,
+    };
+  },
+
+  async transcribeAudio(formData: FormData) {
+    const file = formData.get("file") as File;
+    if (!file) {
+      throw new Error("No file uploaded");
+    }
+
+    // Convert the file to a buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Process the audio with AI
+    const result = await analyzeAudioWithAI(buffer, file.type);
+    if (!result.object.success) {
+      throw new Error("Failed to transcribe audio");
+    }
+
+    return result.object;
   },
 
   async getDailySpendingComparison() {
@@ -141,29 +153,32 @@ export const transactionService = {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
 
-      const todayTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', today)
-        .where('date', '<', tomorrow)
+      const todayTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", today)
+        .where("date", "<", tomorrow)
         .get();
 
       let todayTotal = 0;
-      todayTransactionsSnapshot.forEach(doc => {
+      todayTransactionsSnapshot.forEach((doc) => {
         todayTotal += doc.data().amount || 0;
       });
 
-      const yesterdayTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', yesterday)
-        .where('date', '<', today)
+      const yesterdayTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", yesterday)
+        .where("date", "<", today)
         .get();
 
       let yesterdayTotal = 0;
-      yesterdayTransactionsSnapshot.forEach(doc => {
+      yesterdayTransactionsSnapshot.forEach((doc) => {
         yesterdayTotal += doc.data().amount || 0;
       });
 
       let percentageChange = 0;
       if (yesterdayTotal > 0) {
-        percentageChange = ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100;
+        percentageChange =
+          ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100;
       }
 
       return {
@@ -198,29 +213,32 @@ export const transactionService = {
 
       const endOfLastWeek = new Date(startOfWeek);
 
-      const currentWeekTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', startOfWeek)
-        .where('date', '<', endOfWeek)
+      const currentWeekTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", startOfWeek)
+        .where("date", "<", endOfWeek)
         .get();
 
       let currentWeekTotal = 0;
-      currentWeekTransactionsSnapshot.forEach(doc => {
+      currentWeekTransactionsSnapshot.forEach((doc) => {
         currentWeekTotal += doc.data().amount || 0;
       });
 
-      const lastWeekTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', startOfLastWeek)
-        .where('date', '<', endOfLastWeek)
+      const lastWeekTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", startOfLastWeek)
+        .where("date", "<", endOfLastWeek)
         .get();
 
       let lastWeekTotal = 0;
-      lastWeekTransactionsSnapshot.forEach(doc => {
+      lastWeekTransactionsSnapshot.forEach((doc) => {
         lastWeekTotal += doc.data().amount || 0;
       });
 
       let percentageChange = 0;
       if (lastWeekTotal > 0) {
-        percentageChange = ((currentWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
+        percentageChange =
+          ((currentWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
       }
 
       return {
@@ -247,32 +265,39 @@ export const transactionService = {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-      const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const startOfLastMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - 1,
+        1
+      );
       const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
 
-      const currentMonthTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', startOfMonth)
-        .where('date', '<', endOfMonth)
+      const currentMonthTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", startOfMonth)
+        .where("date", "<", endOfMonth)
         .get();
 
       let currentMonthTotal = 0;
-      currentMonthTransactionsSnapshot.forEach(doc => {
+      currentMonthTransactionsSnapshot.forEach((doc) => {
         currentMonthTotal += doc.data().amount || 0;
       });
 
-      const lastMonthTransactionsSnapshot = await adminDb.collection(`users/${userId}/transactions`)
-        .where('date', '>=', startOfLastMonth)
-        .where('date', '<', endOfLastMonth)
+      const lastMonthTransactionsSnapshot = await adminDb
+        .collection(`users/${userId}/transactions`)
+        .where("date", ">=", startOfLastMonth)
+        .where("date", "<", endOfLastMonth)
         .get();
 
       let lastMonthTotal = 0;
-      lastMonthTransactionsSnapshot.forEach(doc => {
+      lastMonthTransactionsSnapshot.forEach((doc) => {
         lastMonthTotal += doc.data().amount || 0;
       });
 
       let percentageChange = 0;
       if (lastMonthTotal > 0) {
-        percentageChange = ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+        percentageChange =
+          ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
       }
 
       return {
@@ -288,5 +313,5 @@ export const transactionService = {
         error: "Failed to get monthly spending comparison",
       };
     }
-  }
-}; 
+  },
+};

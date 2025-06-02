@@ -18,13 +18,17 @@ export async function uploadImageToCloudinary(
   // use the hash as the public_id
   const publicId = `${userId}/${hash}`;
 
+  // folder based on development or production
+  const folder =
+    process.env.NODE_ENV === "development" ? "user-uploads-dev" : "user-uploads";
+
   return new Promise((resolve, reject) => {
     cloudinary.uploader
       .upload_stream(
         {
           public_id: publicId,
           overwrite: false,
-          folder: `user-uploads/${userId}`,
+          folder: `${folder}/${userId}`,
         },
         (error, uploadResult) => {
           if (error) {
