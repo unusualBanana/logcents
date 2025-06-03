@@ -30,7 +30,7 @@ export async function analyzeAudioWithAI(
     title: z
       .string()
       .describe(
-        "Only extract the store name if explicitly mentioned in the audio. If not mentioned, return an empty string. Do not guess or make assumptions."
+        "If the audio explicitly mentions a store name, extract it. If not, extract the name of the product, service, or transaction purpose mentioned. Do not guess or assume anything not directly stated in the audio."
       ),
     description: z
       .string()

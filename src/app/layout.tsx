@@ -34,10 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-      />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
       {process.env.NODE_ENV === "development" && (
         <head>
           {/* eslint-disable-next-line @next/next/no-sync-scripts */}

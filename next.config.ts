@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       new URL("https://picsum.photos/**"),
     ],
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  }
 };
 
 export default nextConfig;
