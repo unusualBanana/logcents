@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LogCents - Expense Tracker
 
-## Getting Started
+A modern expense tracking application built with Next.js and Firebase. Track your expenses effortlessly using AI-powered receipt scanning and voice recording. The app automatically categorizes your transactions, provides detailed analytics, and helps you manage your finances effectively.
 
-First, run the development server:
+## 🚀 Quick Start
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your credentials
+
+# Start Firebase emulators (for local development)
+npm run firebase
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 📱 Modern, responsive UI with dark/light mode
+- 🔐 Secure authentication with Firebase
+- 💾 Real-time data sync with Firestore
+- 📊 Interactive expense tracking and analytics
+- 📈 Data visualization and insights
+- 🔄 Real-time updates
+- 🎨 Beautiful UI with shadcn/ui
+- 🤖 AI-powered receipt scanning and analysis
+- 🎤 Voice recording for expense entry
+- 📝 Automatic transaction categorization
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**: Next.js 15, Tailwind CSS, shadcn/ui
+- **Backend**: Firebase (Auth, Firestore)
+- **State**: Zustand
+- **Forms**: Zod
+- **Dates**: date-fns
+- **UI**: Sonner (notifications), Cloudinary (images)
+- **Analytics**: PostHog
+- **AI**: Google Gemini AI (via Vercel AI SDK)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔧 Environment Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a `.env.local` file with your credentials for:
+- Firebase (Client & Admin)
+- Cloudinary
+- PostHog Analytics
+- Google AI (GOOGLE_GENERATIVE_AI_API_KEY)
 
-## Deploy on Vercel
+## 📝 Available Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run firebase` | Start Firebase emulators |
+| `npm run seed` | Seed database (dev only) |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

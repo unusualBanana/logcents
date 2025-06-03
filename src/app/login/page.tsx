@@ -1,6 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { isTokenValid } from "@/lib/firebase/auth-utilities";
-import { GalleryVerticalEnd } from "lucide-react";
+import { Coins } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -14,9 +14,9 @@ export default async function LoginPage() {
         <div className="flex justify-center">
           <a href="#" className="flex items-center gap-2 font-medium">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-4" />
+              <Coins className="size-4" />
             </div>
-            Acme Inc.
+            LogCents - Expense Tracker
           </a>
         </div>
         <Card>

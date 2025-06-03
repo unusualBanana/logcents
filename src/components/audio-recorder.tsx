@@ -220,6 +220,10 @@ export default function VoiceRecorderUI({
       <CloseButton onClose={onClose} />
 
       <div className="flex flex-col items-center gap-4">
+        <div className="h-[40px]">
+          {isRecording && <RecordingStatus duration={duration} />}
+        </div>
+
         <RecordButton
           isRecording={isRecording}
           isProcessing={isProcessing}
@@ -234,8 +238,6 @@ export default function VoiceRecorderUI({
             ? "Release to stop recording"
             : "Hold to record"}
         </p>
-
-        {isRecording && <RecordingStatus duration={duration} />}
       </div>
     </div>
   );
